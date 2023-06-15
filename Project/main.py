@@ -1,6 +1,5 @@
 import socket
-from tkinter import NO, Button, Entry, Label, PhotoImage, Tk, Toplevel, filedialog
-from tkinter import messagebox
+from tkinter import NO, Button, Entry, Label, PhotoImage, Tk, Toplevel, filedialog, messagebox
 import os
 from tkinter import ttk
 
@@ -38,8 +37,7 @@ def Send():
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 8192)  # Mengatur ukuran buffer masukan
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 8192)  # Mengatur ukuran buffer keluaran
-
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 8192)  # Mengatur ukuran buffer keluaran
 
         port = 8080
         try:
