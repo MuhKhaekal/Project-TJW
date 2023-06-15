@@ -11,21 +11,19 @@ root.geometry("406x475+320+150")
 root.configure(bg="#f4fdfe")
 root.resizable(False,False)
 
-selected_files = []  # Menyimpan daftar file yang dipilih
-
 def Send ():
     main = Toplevel(root)
     main.title("Send")
     main.geometry("406x475+800+150")
     main.resizable(False,False)
 
-    def SelectFiles():
-        global selected_files
-        selected_files = filedialog.askopenfilenames(initialdir=os.getcwd(),
-                                                    title="Select Image Files",
-                                                    filetypes=(("Text Files", "*.txt"), ("All Files", "*.*")))
-        for file in selected_files:
-            file_path = os.path.basename(file)  # Ambil nama file saja dari path
+    def SelectFile():
+        global filename
+        filename = filedialog.askopenfilename(initialdir=os.getcwd(),
+                                              title="Select Image File",
+                                              filetype=(("file_type", "*.txt"), ("all files", "*.*")))
+        if filename:
+            file_path = os.path.basename(filename)  # Ambil nama file saja dari path
             index = len(listview.get_children()) + 1
             listview.insert("", "end", text=index, values=(index, file_path))
     
@@ -34,43 +32,39 @@ def Send ():
 
         port = 8080
         s.connect((IPAddress.get(), port))
-
-        for file in selected_files:
-            file_data = open(file, "rb").read(1024)
-            while file_data:
-                s.send(file_data)
-                file_data = open(file, "rb").read(1024)
-        
-        s.close()
-        print("Files have been transmitted successfully")
-        messagebox.showinfo("File received", "Files have been transmitted successfully")
-        listview.delete(*listview.get_children())  # Menghapus semua item dalam listview
-        selected_files = []  # Mengosongkan daftar file yang dipilih
+        file = open(filename, "rb")
+        file_data = file.read(1024)
+        while file_data:
+            s.send(file_data)
+            file_data = file.read(1024)
+        file.close()
+        print("File has been transmitted successfully")
+        messagebox.showinfo("File received","File has been transmitted successfully")
 
     bg_send = PhotoImage(file="images/bg_send4.png")
     Label(main,image=bg_send).place(x=-2,y=0)
 
     select_file = PhotoImage(file="images/select_file.png")
-    select = Button(main, image=select_file, borderwidth=0, highlightthickness=0, command=SelectFiles)
-    select.place(x=80, y=210)
+    select = Button(main, image=select_file, borderwidth=0, highlightthickness=0, command=SelectFile)
+    select.place(x=123, y=210)
 
     icon_send = PhotoImage(file="images/icon_send.png")
-    send = Button(main, image=icon_send, borderwidth=0, highlightthickness=0, command=Sender)
-    send.place(x=90, y=380)
+    send = Button (main,image=icon_send, borderwidth=0, highlightthickness=0,command=Sender)
+    send.place(x=90,y=380)
 
     host = socket.gethostname()
-    Label(main, text=f"ID: {host}", font=("Nunito Sans Normal", 15), bg="#FF2358", fg="Black").place(x=90, y=145)
+    Label(main, text=f"ID: {host}",font=("Nunito Sans Normal",15),bg="#FF2358",fg="Black").place(x=90,y=145)
 
-    Label(main, text="Enter receiver IP address:", font=("Nunito Sans", 12, "bold"), bg="#f4fdfe").place(x=100, y=270)
-    IPAddress = Entry(main, width=25, fg="Black", highlightthickness=0, relief='groove', borderwidth=2, bg="#D9D9D9", font=("Nunito Sans Normal", 15))
-    IPAddress.place(x=49, y=300)
+    Label (main,text="Enter receiver IP address:",font=("Nunito Sans",12,"bold"),bg="#f4fdfe").place(x=100,y=270)
+    IPAddress = Entry(main,width=25,fg="Black", highlightthickness=0, relief='groove', borderwidth=2,bg="#D9D9D9",font=("Nunito Sans Normal",15))
+    IPAddress.place(x=49,y=300)
 
-    listview = ttk.Treeview(main, height=3, columns=("No.", "Name file"))
+    listview = ttk.Treeview(main, height=3,columns=("No.", "Name file"))
     listview.pack()
 
     listview.column("#0", width=0, stretch=NO)
-    listview.column("No.", width=50, minwidth=50, anchor="center", stretch=NO)
-    listview.column("Name file", width=300, minwidth=300, anchor="w", stretch=NO)
+    listview.column("No.", width=50, minwidth=50, anchor="center",stretch=NO)
+    listview.column("Name file", width=300, minwidth=300, anchor="w",stretch=NO)
 
     listview.heading("#0", text="")
     listview.heading("No.", text="No.")
