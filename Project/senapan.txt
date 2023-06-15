@@ -1,0 +1,9 @@
+Buatlah Sebuah class senapan java dengan syarat:
+• Memiliki minimal 3 attribute , 2 behaviour , dan 2 constructor
+Salah satu attribute harus berupa user defined variable atau
+bertipe data objek
+Salah satu behaviour dari class harus berinteraksi dengan attribute
+user defined variable
+Perhatikan bahwa method setter dan getter tidak dianggap sebagai
+behaviour
+buatkan class main  nya
