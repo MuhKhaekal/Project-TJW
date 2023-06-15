@@ -1,5 +1,4 @@
 import socket
-import threading
 from tkinter import NO, Button, Entry, Label, PhotoImage, Tk, Toplevel, filedialog
 from tkinter import messagebox
 import os
@@ -58,28 +57,6 @@ def Send():
         print("File has been transmitted successfully")
         messagebox.showinfo("File received", "File has been transmitted successfully")
         listview.delete(*listview.get_children())
-
-        loading_window = Toplevel(main)
-        loading_window.title("Sending File")
-        loading_window.geometry("200x100")
-        loading_label = Label(loading_window, text="Sending...", font=("Nunito Sans", 12))
-        loading_label.pack(pady=20)
-        def send_file():
-            nonlocal loading_window
-            file = open(filename, "rb")
-            file_data = file.read(4096)
-            while file_data:
-                s.send(file_data)
-                file_data = file.read(4096)
-            file.close()
-            print("File has been transmitted successfully")
-            messagebox.showinfo("File received", "File has been transmitted successfully")
-            listview.delete(*listview.get_children())
-            loading_window.destroy()
-
-        # Menggunakan thread untuk mengirim file agar tampilan loading dapat ditampilkan tanpa menghentikan GUI utama
-        thread = threading.Thread(target=send_file)
-        thread.start()
 
     bg_send = PhotoImage(file="images/bg_send4.png")
     Label(main, image=bg_send).place(x=-2, y=0)
@@ -151,29 +128,6 @@ def Receive():
         print("File has been received successfully")
         conn.close()
         messagebox.showinfo("File received", "File has been received successfully")
-
-        loading_window = Toplevel(window)
-        loading_window.title("Receiving File")
-        loading_window.geometry("200x100")
-        loading_label = Label(loading_window, text="Receiving...", font=("Nunito Sans", 12))
-        loading_label.pack(pady=20)
-
-        def receive_file():
-            nonlocal loading_window
-            with open(incoming_file.get(), "wb") as file:
-                while True:
-                    file_data = conn.recv(4096)
-                    if not file_data:
-                        break
-                    file.write(file_data)
-            print("File has been received successfully")
-            conn.close()
-            messagebox.showinfo("File received", "File has been received successfully")
-            loading_window.destroy()
-
-        # Menggunakan thread untuk menerima file agar tampilan loading dapat ditampilkan tanpa menghentikan GUI utama
-        thread = threading.Thread(target=receive_file)
-        thread.start()
 
     bg_receive = PhotoImage(file="images/bg_receive4.png")
     Label(window, image=bg_receive).place(x=-2, y=0)
