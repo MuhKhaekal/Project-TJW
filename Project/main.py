@@ -53,7 +53,7 @@ def Send():
             file_data = file.read(4096)
         file.close()
         print("File has been transmitted successfully")
-        messagebox.showinfo("File received", "File has been transmitted successfully")
+        messagebox.showinfo("File received", "Klik 'OK' to continue sending file" )
         listview.delete(*listview.get_children())
 
     bg_send = PhotoImage(file="images/bg_send4.png")
