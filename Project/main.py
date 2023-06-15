@@ -1,6 +1,5 @@
-from tkinter import *
 import socket
-from tkinter import filedialog
+from tkinter import NO, Button, Entry, Label, PhotoImage, Tk, Toplevel, filedialog
 from tkinter import messagebox
 import os
 from tkinter import ttk
@@ -11,7 +10,6 @@ root.geometry("406x475+320+150")
 root.configure(bg="#f4fdfe")
 root.resizable(False, False)
 
-selected_files = []  # Menyimpan daftar file yang dipilih
 
 def Send():
     main = Toplevel(root)
@@ -19,52 +17,62 @@ def Send():
     main.geometry("406x475+800+150")
     main.resizable(False, False)
 
-    def SelectFiles():
-        global selected_files
-        selected_files = filedialog.askopenfilenames(initialdir=os.getcwd(),
-                                                    title="Select Image Files",
-                                                    filetypes=(("Text Files", ".txt"), ("All Files", ".*")))
-        for file in selected_files:
-            file_path = os.path.basename(file)  # Ambil nama file saja dari path
+    def SelectFile():
+        global filename
+        filename = filedialog.askopenfilename(initialdir=os.getcwd(),
+                                              title="Select Image File",
+                                              filetype=(("file_type", "*.txt"), ("all files", "*.*")))
+        if filename:
+            file_path = os.path.basename(filename)  # Ambil nama file saja dari path
             index = len(listview.get_children()) + 1
             listview.insert("", "end", text=index, values=(index, file_path))
 
     def Sender():
+        if not IPAddress.get():
+            messagebox.showerror("Error", "Please enter receiver IP address")
+            return
+
+        if not filename:
+            messagebox.showerror("Error", "Please select a file")
+            return
+
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         port = 8080
-        s.connect((IPAddress.get(), port))
+        try:
+            s.connect((IPAddress.get(), port))
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to connect: {str(e)}")
+            return
 
-        for file in selected_files:
-            file_data = open(file, "rb").read(1024)
-            while file_data:
-                s.send(file_data)
-                file_data = open(file, "rb").read(1024)
-
-        s.close()
-        print("Files have been transmitted successfully")
-        messagebox.showinfo("File received", "Files have been transmitted successfully")
-        listview.delete(*listview.get_children())  # Menghapus semua item dalam listview
-        selected_files = []  # Mengosongkan daftar file yang dipilih
+        file = open(filename, "rb")
+        file_data = file.read(1024)
+        while file_data:
+            s.send(file_data)
+            file_data = file.read(1024)
+        file.close()
+        print("File has been transmitted successfully")
+        messagebox.showinfo("File received", "File has been transmitted successfully")
+        listview.delete(*listview.get_children())
 
     bg_send = PhotoImage(file="images/bg_send4.png")
     Label(main, image=bg_send).place(x=-2, y=0)
 
     select_file = PhotoImage(file="images/select_file.png")
-    select = Button(main, image=select_file, borderwidth=0, highlightthickness=0, command=SelectFiles)
-    select.place(x=80, y=210)
+    select = Button(main, image=select_file, borderwidth=0, highlightthickness=0, command=SelectFile)
+    select.place(x=30, y=300)
 
     icon_send = PhotoImage(file="images/icon_send.png")
     send = Button(main, image=icon_send, borderwidth=0, highlightthickness=0, command=Sender)
-    send.place(x=90, y=380)
+    send.place(x=210, y=300)
 
     host = socket.gethostname()
     Label(main, text=f"ID: {host}", font=("Nunito Sans Normal", 15), bg="#FF2358", fg="Black").place(x=90, y=145)
 
-    Label(main, text="Enter receiver IP address:", font=("Nunito Sans", 12, "bold"), bg="#f4fdfe").place(x=100, y=270)
-    IPAddress = Entry(main, width=25, fg="Black", highlightthickness=0, relief='groove', borderwidth=2, bg="#D9D9D9",
-                      font=("Nunito Sans Normal", 15))
-    IPAddress.place(x=49, y=300)
+    Label(main, text="Enter receiver IP address:", font=("Nunito Sans", 12, "bold"), bg="#f4fdfe").place(x=100, y=205)
+    IPAddress = Entry(main, width=25, fg="Black", highlightthickness=0, relief='groove', borderwidth=2,
+                      bg="#D9D9D9", font=("Nunito Sans Normal", 15))
+    IPAddress.place(x=49, y=235)
 
     listview = ttk.Treeview(main, height=3, columns=("No.", "Name file"))
     listview.pack()
@@ -76,7 +84,7 @@ def Send():
     listview.heading("#0", text="")
     listview.heading("No.", text="No.")
     listview.heading("Name file", text="Name file")
-    listview.place(x=25, y=450)
+    listview.place(x=25, y=350)
     main.mainloop()
 
 
@@ -88,26 +96,35 @@ def Receive():
     window.resizable(False, False)
 
     def Download():
+        if not SenderID.get():
+            messagebox.showerror("Error", "Please enter sender ID")
+            return
+
+        if not incoming_file.get():
+            messagebox.showerror("Error", "Please enter the file name")
+            return
+
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         host = socket.gethostname()
         port = 8080
-        s.bind((host, port))
-        s.listen(1)
-        print("Waiting for incoming connection...")
-        conn, addr = s.accept()
-        save_path = filedialog.asksaveasfilename(defaultextension=".txt")
-        if save_path:
-            with open(save_path, "wb") as file:
-                while True:
-                    file_data = conn.recv(1024)
-                    if not file_data:
-                        break
-                    file.write(file_data)
-            print("File has been received successfully")
-            messagebox.showinfo("File received", "File has been received successfully")
-        else:
-            print("No save path selected")
+        try:
+            s.bind((host, port))
+            s.listen(1)
+            print("Waiting for incoming connection...")
+            conn, addr = s.accept()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to receive file: {str(e)}")
+            return
+
+        with open(incoming_file.get(), "wb") as file:
+            while True:
+                file_data = conn.recv(1024)
+                if not file_data:
+                    break
+                file.write(file_data)
+        print("File has been received successfully")
         conn.close()
+        messagebox.showinfo("File received", "File has been received successfully")
 
     bg_receive = PhotoImage(file="images/bg_receive4.png")
     Label(window, image=bg_receive).place(x=-2, y=0)
@@ -118,7 +135,7 @@ def Receive():
     SenderID.place(x=23, y=250)
     SenderID.focus()
 
-    Label(window, text="Save File As", font=("Nunito Sans", 15), bg="#f4fdfe").place(x=20, y=300)
+    Label(window, text="File", font=("Nunito Sans", 15), bg="#f4fdfe").place(x=20, y=300)
     incoming_file = Entry(window, width=35, fg="Black", highlightthickness=0, relief="groove", borderwidth=2,
                           bg="#D9D9D9", font=("Nunito Sans Normal", 13))
     incoming_file.place(x=23, y=330)
